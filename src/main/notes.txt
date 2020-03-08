@@ -1,0 +1,32 @@
+- mrmaster and mrworker are concurrenctly executed
+- run mrworkers (M + R) times to generate M + R workers
+- workers notify master of creation
+- master will now assign workers tasks
+- workers will notify master of task completion
+- master will assign an ID to worker on worker's creation report message
+- carry out reduce only on all maps completed
+- Worker ID will be logged along with file names which the file was assigned, for fault tolerance, so we know which worker failed to complete task and put task back in task queue
+
+- nReduces is set to 10 by default
+- the question is how can we distribute intermediate keys into 10 files (as evenly as possible)?
+
+- For each file we perform a mapping task on this file, hence we have nMap X nReduces intermediate files (8 * 10)
+- Each mapping task will generate 10 intermediate files
+- Assign this 80 intermediate files to workers to ultimately generate 3 output files
+
+- Each intermediate file will be saved as "mrIntermediate-X-Y.txt" where X = taskID, Y = partition
+
+- At this point we should have 10 buckets storing all the intermediate files
+ buckets[0] = ['mrIntermediate-0-0', 'mrIntermediate-1-0', 'mrIntermediate-2-0' ...]
+ buckets[1] = ['mrIntermediate-0-1', 'mrIntermediate-1-1', 'mrIntermediate-2-1' ...]
+ ...
+ buckets[9] = ['mrIntermediate-0-9', 'mrIntermediate-1-9', 'mrIntermediate-2-9' ...]
+
+- Each bucket should ultimately product 1 output file "mr-out-X" and we should have 10 output files
+- Each reduce worker should count the words via a hash map and pass to reduce function
+
+- The master, as an RPC server, will be concurrent; don't forget to lock shared data
+
+rm mrIntermediate-*
+
+- Each worker will send a shut down message to master, master will shut down only when it receives shut down message from all workers
