@@ -30,3 +30,6 @@
 rm mrIntermediate-*
 
 - Each worker will send a shut down message to master, master will shut down only when it receives shut down message from all workers
+
+- There may exist a gap between state transitions and input files for next state is not read
+ i.e. master is in reduce state but have yet received all intermediate files, some may still be processing, if master have insufficient intermediate files to assign to workers, master will pass a -1 taskID to worker and worker will sleep through this task
